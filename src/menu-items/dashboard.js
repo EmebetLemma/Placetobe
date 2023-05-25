@@ -41,14 +41,14 @@ const dashboard = {
     // cancelling title: 'Dashboard',
     type: 'group',
     children: [
-        {
-            id: 'default',
-            title: 'Home',
-            type: 'item',
-            url: '/home/default',
-            icon: icons.IconHome,
-            breadcrumbs: false
-        },
+        // {
+        // //     id: 'default',
+        // //     title: 'Events',
+        // //     type: 'item',
+        // //     url: '/events',
+        // //     icon: icons.IconHome,
+        // //     breadcrumbs: false
+        // // },
         {
             id: 'events',
             title: 'Events',
@@ -57,31 +57,6 @@ const dashboard = {
             icon: icons.IconCalendarEvent,
             breadcrumbs: false
         }
-
-        // {
-        //     id: 'sales',
-        //     title: 'Venue',
-        //     type: 'item',
-        //     url: '/sample-page',
-        //     icon: icons.IconBuildingWarehouse,
-        //     breadcrumbs: false
-        // },
-        // {
-        //     id: 'customers',
-        //     title: 'Blog',
-        //     type: 'item',
-        //     url: '/sample-page',
-        //     icon: icons.IconNews,
-        //     breadcrumbs: false
-        // },
-        // {
-        //     id: 'sales',
-        //     title: 'Event Organizers',
-        //     type: 'item',
-        //     url: '/sample-page',
-        //     icon: icons.IconMan,
-        //     breadcrumbs: false
-        // }
     ]
 };
 
