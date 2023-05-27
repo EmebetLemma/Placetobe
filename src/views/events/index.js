@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Typography, Box, Tabs, Tab, Paper, IconButton, ListItemIcon, Skeleton } from '@mui/material';
-import { IconCalendar, IconTicket, IconClockHour7, IconMapPin } from '@tabler/icons';
+import { useState, useEffect } from 'react';
+import {
+    Typography,
+    Box,
+    Tabs,
+    Tab,
+    Paper,
+    IconButton,
+    ListItemIcon,
+    Skeleton,
+    OutlinedInput,
+    InputAdornment,
+    ButtonBase
+} from '@mui/material';
+import { IconCalendar, IconTicket, IconClockHour7, IconMapPin, IconSearch } from '@tabler/icons';
 import { useTheme } from '@mui/material/styles';
-
 import { Grid, Card, CardContent, CardActionArea } from '@mui/material';
-
 import PropTypes from 'prop-types';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 // project imports
@@ -18,12 +28,13 @@ import { useNavigate } from 'react-router-dom';
 
 const Events = () => {
     const theme = useTheme();
+    const [searchText, setSearchText] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
     const [loading, setLoading] = useState(true);
     const [events, setEvents] = useState([]);
     const [filter, setFilter] = useState('TodayEvents.php');
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(12);
+    const [page] = useState(0);
+    const [rowsPerPage] = useState(12);
 
     const handleCategoryClick = (category) => {
         if (activeCategory === category.title) {
@@ -32,17 +43,21 @@ const Events = () => {
             setActiveCategory(category.title);
         }
     };
-
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
+    const handleSearchTextChange = (event) => {
+        setSearchText(event.target.value);
     };
 
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
+    // const handleChangePage = (event, newPage) => {
+    //     setPage(newPage);
+    // };
+
+    // const handleChangeRowsPerPage = (event) => {
+    //     setRowsPerPage(parseInt(event.target.value, 10));
+    //     setPage(0);
+    // };
     const handleTabChange = (event, value) => {
         setFilter(value);
+        setSearchText('');
     };
 
     useEffect(() => {
@@ -62,6 +77,12 @@ const Events = () => {
 
     const FilterCategory = events.filter((event) => {
         let isMatch = true;
+
+        if (searchText) {
+            const searchRegex = new RegExp(searchText, 'i');
+            isMatch = isMatch && (searchRegex.test(event.event_name) || searchRegex.test(event.event_address));
+        }
+
         if (activeCategory !== 'All') {
             isMatch = isMatch && event.category === activeCategory;
         }
@@ -72,6 +93,52 @@ const Events = () => {
 
     return (
         <>
+            <Box>
+                <Grid container>
+                    <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Box>
+                            <Typography variant="h2" sx={{ textAlign: 'center', marginY: 2 }}>
+                                All Events Happening In Ethiopia
+                            </Typography>
+                            <OutlinedInput
+                                id="input-search-header"
+                                value={searchText}
+                                onChange={handleSearchTextChange}
+                                placeholder="Search"
+                                sx={{
+                                    width: 634,
+
+                                    [theme.breakpoints.down('lg')]: {
+                                        width: 434
+                                    },
+                                    [theme.breakpoints.down('md')]: {
+                                        width: '100%',
+                                        background: '#fff'
+                                    }
+                                }}
+                                startAdornment={
+                                    <InputAdornment position="start">
+                                        <IconSearch stroke={1.5} size="1rem" color={theme.palette.grey[500]} />
+                                    </InputAdornment>
+                                }
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        <ButtonBase sx={{ borderRadius: '12px' }}>
+                                            {/* a component to filter the events */}
+                                            {/* <HeaderAvatarStyle variant="rounded">
+                                    <IconAdjustmentsHorizontal stroke={1.5} size="1.3rem" />
+                                </HeaderAvatarStyle> */}
+                                        </ButtonBase>
+                                    </InputAdornment>
+                                }
+                                aria-describedby="search-helper-text"
+                                inputProps={{ 'aria-label': 'weight' }}
+                            />
+                        </Box>
+                    </Grid>
+                </Grid>
+            </Box>
+
             <Box
                 sx={{
                     display: 'flex',
@@ -130,7 +197,7 @@ const Events = () => {
                 ))}
             </Box>
 
-            <>
+            <Box gutterBottom>
                 <Paper paddingX={3} sx={{ marginBottom: theme.spacing(2) }}>
                     <Tabs
                         value={filter}
@@ -196,7 +263,7 @@ const Events = () => {
                 ) : (
                     <EventCard events={paginatedData.slice(5, paginatedData.length)} />
                 )}
-            </>
+            </Box>
         </>
     );
 };
@@ -262,7 +329,7 @@ const EventCard = ({ events }) => {
                                     </Typography>
 
                                     <Box display="flex" alignItems="center" marginBottom={1} marginTop={2}>
-                                        <ListItemIcon>
+                                        <ListItemIcon sx={{ color: theme.palette.warning.dark }}>
                                             <IconCalendar />
                                         </ListItemIcon>
                                         <Typography variant="body2" className="fw-semibold">
@@ -270,7 +337,7 @@ const EventCard = ({ events }) => {
                                         </Typography>
                                     </Box>
                                     <Box display="flex" alignItems="center" marginBottom={1}>
-                                        <ListItemIcon>
+                                        <ListItemIcon sx={{ color: theme.palette.warning.dark }}>
                                             <IconClockHour7 />
                                         </ListItemIcon>
                                         <Typography variant="body2" className="fw-semibold">
@@ -278,7 +345,7 @@ const EventCard = ({ events }) => {
                                         </Typography>
                                     </Box>
                                     <Box display="flex" alignItems="center" marginBottom={1}>
-                                        <ListItemIcon>
+                                        <ListItemIcon sx={{ color: theme.palette.warning.dark }}>
                                             <IconMapPin />
                                         </ListItemIcon>
                                         <Typography variant="body2" className="fw-semibold">
@@ -286,7 +353,7 @@ const EventCard = ({ events }) => {
                                         </Typography>
                                     </Box>
                                     <Box display="flex" alignItems="center">
-                                        <ListItemIcon>
+                                        <ListItemIcon sx={{ color: theme.palette.warning.dark }}>
                                             <IconTicket />
                                         </ListItemIcon>
                                         <Typography variant="body2" className="fw-semibold">
