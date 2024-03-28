@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 // material-ui
@@ -28,28 +28,25 @@ import MainCard from 'ui-component/cards/MainCard';
 import Transitions from 'ui-component/extended/Transitions';
 
 // assets
-import { IconLogout, IconSettings, IconUser } from '@tabler/icons';
+import { IconBookmarks, IconLogout, IconSettings, IconTicket, IconUser } from '@tabler/icons';
+import Connections from 'api';
 
 // ==============================|| PROFILE MENU ||============================== //
 
 const ProfileSection = () => {
     const theme = useTheme();
-    const customization = useSelector((state) => state.customization);
+    const { rememberme, borderRadius } = useSelector((state) => state.customization);
     const navigate = useNavigate();
 
-    // const [sdm, setSdm] = useState(true);
-    // const [value, setValue] = useState('');
-    // const [notification, setNotification] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [open, setOpen] = useState(false);
-    const [isLogged] = useState(false);
+    const [isLogged, setIsLoged] = useState(false);
+    const user = rememberme ? JSON.parse(localStorage.getItem('user')) : JSON.parse(sessionStorage.getItem('user'));
+    const picturePreview = user?.profile ? Connections.api + Connections.assets + user?.profile : null;
     /**
      * anchorRef is used on different componets and specifying one type leads to other components throwing an error
      * */
     const anchorRef = useRef(null);
-    const handleLogout = async () => {
-        console.log('Logout');
-    };
 
     const handleClose = (event) => {
         if (anchorRef.current && anchorRef.current.contains(event.target)) {
@@ -67,7 +64,19 @@ const ProfileSection = () => {
         }
     };
     const handleToggle = () => {
-        setOpen((prevOpen) => !prevOpen);
+        if (isLogged) {
+            setOpen((prevOpen) => !prevOpen);
+        } else {
+            navigate('/signin');
+        }
+    };
+
+    const handleSignout = (event) => {
+        localStorage.clear();
+        sessionStorage.clear();
+        navigate('/');
+        location.reload();
+        handleClose(event);
     };
 
     const prevOpen = useRef(open);
@@ -78,6 +87,16 @@ const ProfileSection = () => {
 
         prevOpen.current = open;
     }, [open]);
+
+    useEffect(() => {
+        const token = rememberme ? localStorage.getItem('token') : sessionStorage.getItem('token');
+        const user = rememberme ? localStorage.getItem('user') : sessionStorage.getItem('user');
+
+        if (token && user) {
+            setIsLoged(true);
+        }
+        return () => {};
+    }, [rememberme]);
 
     return (
         <>
@@ -91,10 +110,36 @@ const ProfileSection = () => {
                 ref={anchorRef}
                 aria-controls={open ? 'menu-list-grow' : undefined}
                 aria-haspopup="true"
-                color="inherit"
+                color="secondary"
                 onClick={handleToggle}
             >
-                <IconUser color={theme.palette.warning.dark} />
+                {picturePreview ? (
+                    <img
+                        src={picturePreview}
+                        alt="profile"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '50%',
+                            backgroundColor: theme.palette.background.default,
+                            aspectRatio: 1,
+                            objectFit: 'cover'
+                        }}
+                    />
+                ) : (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            width: '100%',
+                            height: '100%'
+                        }}
+                    >
+                        <IconUser size={24} />
+                    </Box>
+                )}
             </Avatar>
 
             <Popper
@@ -119,21 +164,38 @@ const ProfileSection = () => {
                     <Transitions in={open} {...TransitionProps}>
                         <Paper>
                             <ClickAwayListener onClickAway={handleClose}>
-                                {isLogged ? (
+                                {isLogged && (
                                     <MainCard border={false} elevation={16} content={false} boxShadow shadow={theme.shadows[16]}>
                                         <Box sx={{ p: 2 }}>
                                             <Stack>
                                                 <Stack direction="row" spacing={0.5} alignItems="center">
-                                                    <Typography component="span" variant="h4" sx={{ fontWeight: 400 }}>
-                                                        Johne Doe
-                                                    </Typography>
+                                                    <Link
+                                                        to="/user/profile"
+                                                        component="span"
+                                                        style={{
+                                                            fontWeight: 400,
+                                                            fontSize: 18,
+                                                            textTransform: 'capitalize'
+                                                        }}
+                                                    >
+                                                        {user?.first_name} {user?.middle_name}
+                                                    </Link>
                                                 </Stack>
-                                                <Typography variant="subtitle2">Project Admin</Typography>
+
+                                                {user?.email && (
+                                                    <Link
+                                                        to="/user/profile"
+                                                        variant="caption"
+                                                        style={{ textDecoration: 'none', color: '#555', marginTop: 2 }}
+                                                    >
+                                                        {user?.email}
+                                                    </Link>
+                                                )}
                                             </Stack>
                                         </Box>
                                         <PerfectScrollbar style={{ height: '100%', maxHeight: 'calc(100vh - 250px)', overflowX: 'hidden' }}>
-                                            <Box sx={{ p: 2 }}>
-                                                <Divider />
+                                            <Divider />
+                                            <Box sx={{ p: 1 }}>
                                                 <List
                                                     component="nav"
                                                     sx={{
@@ -151,9 +213,9 @@ const ProfileSection = () => {
                                                     }}
                                                 >
                                                     <ListItemButton
-                                                        sx={{ borderRadius: `${customization.borderRadius}px` }}
+                                                        sx={{ borderRadius: `${borderRadius}px` }}
                                                         selected={selectedIndex === 0}
-                                                        onClick={(event) => handleListItemClick(event, 0, '/user/account-profile/profile1')}
+                                                        onClick={(event) => handleListItemClick(event, 0, '/user/profile')}
                                                     >
                                                         <ListItemIcon>
                                                             <IconSettings stroke={1.5} size="1.3rem" />
@@ -162,28 +224,40 @@ const ProfileSection = () => {
                                                     </ListItemButton>
 
                                                     <ListItemButton
-                                                        sx={{ borderRadius: `${customization.borderRadius}px` }}
-                                                        selected={selectedIndex === 4}
-                                                        onClick={handleLogout}
+                                                        sx={{ borderRadius: `${borderRadius}px` }}
+                                                        selected={selectedIndex === 1}
+                                                        onClick={(event) => handleListItemClick(event, 1, '/bookmarks')}
+                                                    >
+                                                        <ListItemIcon>
+                                                            <IconBookmarks stroke={1.5} size="1.3rem" />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary={<Typography variant="body2">Bookmarks</Typography>} />
+                                                    </ListItemButton>
+
+                                                    <ListItemButton
+                                                        sx={{ borderRadius: `${borderRadius}px` }}
+                                                        selected={selectedIndex === 2}
+                                                        onClick={(event) => handleListItemClick(event, 2, '/tickets')}
+                                                    >
+                                                        <ListItemIcon>
+                                                            <IconTicket stroke={1.5} size="1.3rem" />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary={<Typography variant="body2">Your tickets</Typography>} />
+                                                    </ListItemButton>
+
+                                                    <ListItemButton
+                                                        sx={{ borderRadius: `${borderRadius}px`, marginTop: 6 }}
+                                                        selected={selectedIndex === 3}
+                                                        onClick={(event) => handleSignout(event)}
                                                     >
                                                         <ListItemIcon>
                                                             <IconLogout stroke={1.5} size="1.3rem" />
                                                         </ListItemIcon>
-                                                        <ListItemText primary={<Typography variant="body2">Logout</Typography>} />
+                                                        <ListItemText primary={<Typography variant="body2">Sign out</Typography>} />
                                                     </ListItemButton>
                                                 </List>
                                             </Box>
                                         </PerfectScrollbar>
-                                    </MainCard>
-                                ) : (
-                                    <MainCard>
-                                        <Box sx={{ textAlign: 'center' }}>
-                                            <Typography variant="body" sx={{ mb: 4 }}>
-                                                We are baking a profile page
-                                            </Typography>
-                                            <Typography variant="subtitle2">Check this after a while</Typography>
-                                            {/* <Button sx={{ mt: 2, color: theme.palette.warning.dark }}>Sign In</Button> */}
-                                        </Box>
                                     </MainCard>
                                 )}
                             </ClickAwayListener>
